@@ -1,10 +1,9 @@
-const request = require("request");
-const pogobuf = require("pogobuf");
+"use strict";
 
-const assets = require("./assets");
+let request = require("request");
+let pogobuf = require("pogobuf");
 
-// download delay
-const delay = 5e2;
+let assets = require("./assets");
 
 let session = null;
 let loggedIn = false;
