@@ -1,6 +1,6 @@
 {
   "name": "pogo-asset-downloader",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Pokemon GO asset downloader",
   "license": "MIT",
   "repository": "https://github.com/maierfelix/pogo-asset-downloader",
@@ -22,7 +22,7 @@
     "downloader"
   ],
   "dependencies": {
-    "pogobuf": "^1.5.0",
+    "pogobuf": "^1.5.1",
     "request": "^2.74.0",
     "pokename": "^0.3.0"
   },
