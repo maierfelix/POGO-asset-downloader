@@ -23,7 +23,9 @@ function login(obj) {
       loggedIn = true;
       session = client;
       session.downloadModels = obj.hasOwnProperty("downloadModels") ? obj.downloadModels : true;
-      resolve();
+      client.getAssetDigest(2, "", "", "", 3300).then((asset) => {
+        resolve(asset);
+      });
     });
   });
 
