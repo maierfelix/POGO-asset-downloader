@@ -15,7 +15,7 @@ function login(obj) {
   let client = new pogobuf.Client();
   let loginProvider = obj.provider === "ptc" ? new pogobuf.PTCLogin() : new pogobuf.GoogleLogin();
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     loginProvider.login(obj.username, obj.password).then(token => {
       client.setAuthInfo(obj.provider, token);
       return (client.init());
@@ -24,8 +24,15 @@ function login(obj) {
       session = client;
       session.downloadModels = obj.hasOwnProperty("downloadModels") ? obj.downloadModels : true;
       client.getAssetDigest(2, "", "", "", 3300).then((asset) => {
-        resolve(asset);
+        client.downloadItemTemplates().then((master) => {
+          resolve({
+            asset: asset,
+            master: master
+          });
+        });
       });
+    }).catch((e) => {
+      reject(e);
     });
   });
 
