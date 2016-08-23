@@ -23,12 +23,10 @@ function login(obj) {
       loggedIn = true;
       session = client;
       session.downloadModels = obj.hasOwnProperty("downloadModels") ? obj.downloadModels : true;
-      client.getAssetDigest(2, "", "", "", 3300).then((asset) => {
-        client.downloadItemTemplates().then((master) => {
-          resolve({
-            asset: asset,
-            master: master
-          });
+      client.downloadItemTemplates().then((master) => {
+        resolve({
+          client: client,
+          master: master
         });
       });
     }).catch((e) => {
