@@ -1,16 +1,45 @@
 "use strict";
 
+let fs = require("fs");
 let request = require("request");
 let pogobuf = require("pogobuf");
 
-let assets = require("./assets");
+let assets = {};
+
+// asset to use
+let current_asset = null;
 
 let session = null;
 let loggedIn = false;
 
+let platforms = [
+  {
+    name: "android",
+    platform: 2,
+    manufacturer: "LGE",
+    model: "Nexus 5",
+    locale: "",
+    version: 3300
+  },
+  {
+    name: "ios",
+    platform: 1,
+    manufacturer: "Apple",
+    model: "N66AP",
+    locale: "",
+    version: 3300
+  }
+];
+
+function setPlatform(value) {
+  let platform = value.toLowerCase() === "ios" ? "ios" : "android";
+  // set platform
+  current_asset = platform === "ios" ? assets["ios"].digest : assets["android"].digest;
+}
+
 function login(obj) {
 
-  obj.provider = obj.provider === "ptc" ? "ptc" : "google";
+  obj.provider = obj.provider.toLowerCase() === "ptc" ? "ptc" : "google";
 
   let client = new pogobuf.Client();
   let loginProvider = obj.provider === "ptc" ? new pogobuf.PTCLogin() : new pogobuf.GoogleLogin();
@@ -23,17 +52,80 @@ function login(obj) {
       loggedIn = true;
       session = client;
       session.downloadModels = obj.hasOwnProperty("downloadModels") ? obj.downloadModels : true;
-      client.downloadItemTemplates().then((master) => {
-        resolve({
-          client: client,
-          master: master
-        });
+      validateAssets().then(() => {
+        // auto set platform
+        setPlatform(platforms[0].name);
+        resolve(client);
       });
     }).catch((e) => {
       reject(e);
     });
   });
 
+}
+
+function fileExists(path) {
+  try {
+    fs.statSync(path);
+  } catch (e) {
+    return (false);
+  }
+  return (true);
+}
+
+function validateAssets() {
+  return new Promise((resolve, reject) => {
+    // check if assets exist
+    let index = 0;
+    let length = platforms.length;
+    for (let ii = 0; ii < length; ++ii) {
+      let name = platforms[ii].name;
+      if (!fileExists("assets_" + name)) {
+        getAssetDigest(platforms[ii]).then((asset) => {
+          assets[name] = asset;
+          for (let node of asset.digest) {
+            delete node.key;
+          };
+          try {
+            fs.writeFileSync("./assets_" + name, JSON.stringify(assets[name], null, 2), "utf8");
+            if (++index >= length) resolve();
+          } catch (e) {
+            console.log(e);
+          }
+        });
+      }
+      else {
+        try {
+          assets[name] = JSON.parse(fs.readFileSync("./assets_" + name, "utf8"));
+          if (++index >= length) resolve();
+        } catch (e) {
+          console.log(e);
+        }
+      }
+    };
+  });
+}
+
+function getAssetDigest(obj) {
+  return new Promise((resolve) => {
+    session.getAssetDigest(
+      obj.platform,
+      obj.manufacturer,
+      obj.model,
+      obj.locale,
+      obj.version
+    ).then((asset) => {
+      resolve(asset);
+    });
+  });
+}
+
+function getGameMaster() {
+  return new Promise((resolve) => {
+    session.downloadItemTemplates().then((master) => {
+      resolve(master);
+    });
+  });
 }
 
 function getAssets(assets) {
@@ -124,7 +216,7 @@ function sortArrayByIndex(array) {
 }
 
 function getAssetIdByBundleName(name) {
-  for (let key of assets) {
+  for (let key of current_asset) {
     if (key.bundle_name === name) {
       return (key.asset_id);
     }
@@ -133,7 +225,7 @@ function getAssetIdByBundleName(name) {
 }
 
 function getBundleNameByAssetId(id) {
-  for (let key of assets) {
+  for (let key of current_asset) {
     if (key.asset_id === id) {
       return (key.bundle_name);
     }
@@ -198,6 +290,9 @@ function getAssetByPokemonName(names, lang) {
 
 module.exports = {
   login: login,
+  setPlatform: setPlatform,
+  getGameMaster: getGameMaster,
+  getAssetDigest: getAssetDigest,
   getAssetByAssetId: getAssetByAssetId,
   getAssetByPokemonId: getAssetByPokemonId,
   getAssetByPokemonName: getAssetByPokemonName

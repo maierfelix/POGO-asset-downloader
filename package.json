@@ -1,6 +1,6 @@
 {
   "name": "pogo-asset-downloader",
-  "version": "0.2.5",
+  "version": "0.3.0",
   "description": "Pokemon GO asset downloader",
   "license": "MIT",
   "repository": "https://github.com/maierfelix/pogo-asset-downloader",
@@ -9,20 +9,22 @@
     "email": "maier.felix96@gmail.com"
   },
   "engines": {
-    "node": ">=4"
+    "node": ">=6"
   },
   "keywords": [
     "pokemon",
     "pokemongo",
-    "ripper",
+    "pokemon-go",
+    "pokemon go",
     "rip",
+    "ripper",
     "model",
     "3d",
     "asset",
     "downloader"
   ],
   "dependencies": {
-    "pogobuf": "^1.5.3",
+    "pogobuf": "^1.6.0",
     "request": "^2.74.0",
     "pokename": "^0.3.0"
   },
