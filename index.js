@@ -1,6 +1,5 @@
 "use strict";
 
-let fs = require("fs");
 let request = require("request");
 let pogobuf = require("pogobuf");
 
@@ -64,15 +63,6 @@ function login(obj) {
 
 }
 
-function fileExists(path) {
-  try {
-    fs.statSync(path);
-  } catch (e) {
-    return (false);
-  }
-  return (true);
-}
-
 function validateAssets() {
   return new Promise((resolve, reject) => {
     // check if assets exist
@@ -80,33 +70,21 @@ function validateAssets() {
     let length = platforms.length;
     for (let ii = 0; ii < length; ++ii) {
       let name = platforms[ii].name;
-      if (!fileExists("assets_" + name)) {
-        getAssetDigest(platforms[ii]).then((asset) => {
-          assets[name] = asset;
-          for (let node of asset.digest) {
-            delete node.key;
-          };
-          try {
-            fs.writeFileSync("./assets_" + name, JSON.stringify(assets[name], null, 2), "utf8");
-            if (++index >= length) resolve();
-          } catch (e) {
-            console.log(e);
-          }
-        });
-      }
-      else {
-        try {
-          assets[name] = JSON.parse(fs.readFileSync("./assets_" + name, "utf8"));
-          if (++index >= length) resolve();
-        } catch (e) {
-          console.log(e);
-        }
-      }
+      getAssetDigest(platforms[ii]).then((asset) => {
+        for (let node of asset.digest) {
+          delete node.key;
+        };
+        assets[name] = asset;
+        if (++index >= length) resolve();
+      });
     };
   });
 }
 
 function getAssetDigest(obj) {
+
+  if (!loggedIn) throw new Error("Invalid session, maybe not logged in?");
+
   return new Promise((resolve) => {
     session.getAssetDigest(
       obj.platform,
@@ -290,6 +268,7 @@ function getAssetByPokemonName(names, lang) {
 
 module.exports = {
   login: login,
+  platforms: platforms,
   setPlatform: setPlatform,
   getGameMaster: getGameMaster,
   getAssetDigest: getAssetDigest,
